@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Airbnb Price Predictor Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-xl w-full bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-rose-500">Airbnb India Pricing AI</h1>
+            <p class="text-gray-400 text-sm mt-1">Live PropTech Machine Learning Valuation Dashboard</p>
+        </div>
+        
+        <form id="predictForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Select City</label>
+                <select id="city" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Bengaluru">Bengaluru</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Kolkata">Kolkata</option>
+                    <option value="Jaipur">Jaipur</option>
+                    <option value="Kochi">Kochi</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Room Type</label>
+                <select id="room_type" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                    <option value="Entire home/apt">Entire home/apt</option>
+                    <option value="Private room">Private room</option>
+                    <option value="Shared room">Shared room</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Accommodates (Guests)</label>
+                    <input type="number" id="accommodates" value="2" min="1" max="10" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Bedrooms</label>
+                    <input type="number" id="bedrooms" value="1" min="1" max="5" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Amenities (Comma separated)</label>
+                <input type="text" id="amenities" value="Wi-Fi, Air Conditioning, Pool" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+            </div>
+
+            <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-lg">
+                Calculate Recommended Nightly Price
+            </button>
+        </form>
+
+        <div id="resultBox" class="mt-8 hidden bg-gray-900 border border-rose-500/50 p-6 rounded-xl space-y-4">
+            <div class="text-center border-b border-gray-800 pb-4">
+                <h3 class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Estimated Rental Rate</h3>
+                <p id="priceOutput" class="text-4xl font-black text-rose-400 mt-1">₹0.00</p>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-semibold text-gray-300 mb-2">Your Input Summary:</h4>
+                <ul class="text-xs text-gray-400 space-y-1 bg-gray-800/60 p-3 rounded-lg border border-gray-700">
+                    <li><span class="text-gray-300 font-medium">City:</span> <span id="resCity">-</span></li>
+                    <li><span class="text-gray-300 font-medium">Room Type:</span> <span id="resRoom">-</span></li>
+                    <li><span class="text-gray-300 font-medium">Accommodates:</span> <span id="resGuests">-</span> Guests</li>
+                    <li><span class="text-gray-300 font-medium">Bedrooms:</span> <span id="resBeds">-</span></li>
+                    <li><span class="text-gray-300 font-medium">Amenities:</span> <span id="resAmenities">-</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const city = document.getElementById('city').value;
+            const room_type = document.getElementById('room_type').value;
+            const accommodates = document.getElementById('accommodates.value') || document.getElementById('accommodates').value;
+            const bedrooms = document.getElementById('bedrooms').value;
+            const amenities = document.getElementById('amenities').value;
+
+            const payload = { city, room_type, accommodates, bedrooms, amenities };
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if(data.success) {
+                    document.getElementById('priceOutput').innerText = `₹${data.predicted_price.toLocaleString('en-IN')}`;
+                    document.getElementById('resCity').innerText = city;
+                    document.getElementById('resRoom').innerText = room_type;
+                    document.getElementById('resGuests').innerText = accommodates;
+                    document.getElementById('resBeds').innerText = bedrooms;
+                    document.getElementById('resAmenities').innerText = amenities;
+                    document.getElementById('resultBox').classList.remove('hidden');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Failed to connect to prediction server.');
+            }
+        });
+    </script>
+</body>
+</html>
